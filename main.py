@@ -109,7 +109,7 @@ class Vacancy:
             file.write(
                 f", что подразумевает в ходе работы над реально полезным продуктом рост меня как разработчика .\n")
             file.write(f"Буду благодарен за любую обратную связь.\n\n")
-            file.write(f"Мои контакты: тг. @zrivkoren1")
+            file.write(f"Мои контакты: тг. @{os.getenv('MY_TELEGRAM')}")
             pass
 
 
