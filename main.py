@@ -119,12 +119,23 @@ class Vacancy:
                 f"Также знаком с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url} \n\n")
             file.write(self.create_ai_text())
             file.write(f"\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
-            file.write(f"Мои контакты: тг. @{os.getenv('MY_TELEGRAM')}")
+            file.write(f"Мои контакты: тг: @{os.getenv('MY_TELEGRAM')} e-mail: {os.getenv('MY_EMAIL')}")
             file.write(f"\n\n{self.company_name}\n{self.position}\n{self.url}")
         print("Конец обработки вакансии и резюме")
         file_path = f"output_files/{date.today()}_{self.company_name}.txt"
         notepad_path = r'C:\Program Files\Notepad++\notepad++.exe'
         subprocess.run([notepad_path, file_path], shell=True)
+
+
+class SimpleVacancy(Vacancy):
+    def __init__(self, url=None):
+        self._skills = []
+        with open("simple_vacancy.txt", "r", encoding="utf-8") as file:
+            self.url = file.readline()
+            self.company_name = file.readline().strip()
+            self.position = file.readline().strip()
+            self.company_text = " ".join([x.strip() for x in file.readlines()])
+        self.check_text_on_skills(self.company_text)
 
 
 class MyResume:
@@ -138,4 +149,6 @@ class MyResume:
 if __name__ == '__main__':
     my_resume = MyResume()
     vacancy = Vacancy(os.getenv("VACATION_URL"))
-    vacancy.create_cover_letter(my_resume)
+    # vacancy.create_cover_letter(my_resume)
+    offline_vacancy = SimpleVacancy()
+    # offline_vacancy.create_cover_letter(my_resume)
