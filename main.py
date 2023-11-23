@@ -88,9 +88,15 @@ class Vacancy:
 
     def compare_skills(self, resume):
         compare = {
-            "matching_skills": [x for x in resume.skills if x in self.skills],
-            "my_remaining_skills": [x for x in resume.skills if x not in self.skills],
-            "ready_to_study": [x for x in self.skills if x not in resume.skills],
+            "matching_skills": [x for x in resume.skills if re.search(
+                r'\b' + x + r'\b', ' '.join(self.skills), re.IGNORECASE
+            )],
+            "my_remaining_skills": [x for x in resume.skills if not re.search(
+                r'\b' + x + r'\b', ' '.join(self.skills), re.IGNORECASE
+            )],
+            "ready_to_study": [x for x in self.skills if not re.search(
+                r'\b' + x + r'\b', ' '.join(resume.skills), re.IGNORECASE
+            )],
         }
         return compare
 
@@ -112,9 +118,10 @@ class Vacancy:
             file.write(
                 f"Также знаком с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url} \n\n")
             file.write(self.create_ai_text())
-            file.write(f"Готов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
+            file.write(f"\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
             file.write(f"Мои контакты: тг. @{os.getenv('MY_TELEGRAM')}")
-            print("Конец обработки вакансии и резюме")
+            file.write(f"\n\n{self.company_name}\n{self.position}\n{self.url}")
+        print("Конец обработки вакансии и резюме")
         file_path = f"output_files/{date.today()}_{self.company_name}.txt"
         notepad_path = r'C:\Program Files\Notepad++\notepad++.exe'
         subprocess.run([notepad_path, file_path], shell=True)
