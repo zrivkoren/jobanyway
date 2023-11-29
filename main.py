@@ -118,7 +118,7 @@ class Vacancy:
             file.write(
                 f"Также знаком с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url} \n\n")
             file.write(self.create_ai_text())
-            file.write(f"\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
+            file.write(f"\n\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
             file.write(f"Мои контакты: тг: @{os.getenv('MY_TELEGRAM')} e-mail: {os.getenv('MY_EMAIL')}")
             file.write(f"\n\n{self.company_name}\n{self.position}\n{self.url}")
         print("Конец обработки вакансии и резюме")
@@ -146,9 +146,15 @@ class MyResume:
         self.resume_file_url = os.getenv("RESUME_FILE_URL")
 
 
+IS_HH_VACATION = True
+
 if __name__ == '__main__':
     my_resume = MyResume()
-    vacancy = Vacancy(os.getenv("VACATION_URL"))
-    # vacancy.create_cover_letter(my_resume)
-    offline_vacancy = SimpleVacancy()
+    if IS_HH_VACATION:
+        vacancy = Vacancy(os.getenv("VACATION_URL"))
+    else:
+        vacancy = SimpleVacancy()
+    vacancy.create_cover_letter(my_resume)
+
+    # offline_vacancy = SimpleVacancy()
     # offline_vacancy.create_cover_letter(my_resume)
