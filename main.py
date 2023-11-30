@@ -37,6 +37,7 @@ class Vacancy:
         self.position = content["position"]
         self.company_name = content["company_name"]
         self.company_text = content["company_text"]
+        self.salary = content["salary"]
 
     @property
     def skills(self):
@@ -66,6 +67,12 @@ class Vacancy:
             ) for x in soup.findAll('div', class_='bloko-tag bloko-tag_inline')]
             company_text = soup.find('div', class_='vacancy-section').text
             content["company_text"] = company_text
+            try:
+                salary = soup.find(attrs={'data-qa': 'vacancy-salary'}).text
+            except:
+                salary = "Зарплата не указана"
+            content["salary"] = salary
+
             self.check_text_on_skills(company_text)
         except Exception as e:
             print(e)
@@ -120,7 +127,7 @@ class Vacancy:
             file.write(self.create_ai_text())
             file.write(f"\n\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
             file.write(f"Мои контакты: тг: @{os.getenv('MY_TELEGRAM')} e-mail: {os.getenv('MY_EMAIL')}")
-            file.write(f"\n\n{self.company_name}\n{self.position}\n{self.url}")
+            file.write(f"\n\n{self.company_name}\n{self.position}\n{self.url}\n{self.salary}")
         print("Конец обработки вакансии и резюме")
         file_path = f"output_files/{date.today()}_{self.company_name}.txt"
         notepad_path = r'C:\Program Files\Notepad++\notepad++.exe'
@@ -134,6 +141,7 @@ class SimpleVacancy(Vacancy):
             self.url = file.readline()
             self.company_name = file.readline().strip()
             self.position = file.readline().strip()
+            self.salary = file.readline().strip()
             self.company_text = " ".join([x.strip() for x in file.readlines()])
         self.check_text_on_skills(self.company_text)
 
@@ -155,6 +163,3 @@ if __name__ == '__main__':
     else:
         vacancy = SimpleVacancy()
     vacancy.create_cover_letter(my_resume)
-
-    # offline_vacancy = SimpleVacancy()
-    # offline_vacancy.create_cover_letter(my_resume)
