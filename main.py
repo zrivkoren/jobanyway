@@ -36,8 +36,12 @@ class Vacancy:
         content = self.parse_vacancy()
         self.position = content["position"]
         self.company_name = content["company_name"]
-        self.company_text = content["company_text"]
+        self.company_text = self.get_clean_text(content["company_text"])
         self.salary = content["salary"]
+
+    @staticmethod
+    def get_clean_text(text):
+        return re.sub(r"[^а-яА-Яa-zA-Z.,;:!?]", " ", text)
 
     @property
     def skills(self):
@@ -115,16 +119,17 @@ class Vacancy:
         matching_skills = ', '.join(compare["matching_skills"])
         my_remaining_skills = ', '.join(compare["my_remaining_skills"])
         ready_to_study = ', '.join(compare["ready_to_study"])
-        with open(f"output_files/{date.today()}_{self.company_name}.txt", "w") as file:
+        created_ai_text = self.create_ai_text()
+        with open(f"output_files/{date.today()}_{self.company_name}.txt", "w", encoding="utf-8") as file:
             file.write("Добрый день!\n")
             file.write(f"Меня зовут {resume.name}, пишу по вакансии {self.position}.\n")
             file.write(f"У меня есть опыт разработки на {matching_skills}.\n")
             file.write(
-                f"Мои проекты можно посмотреть на гитхабе {resume.my_github}\n")
+                f"Некоторые мои проекты можно посмотреть на гитхабе {resume.my_github}\n")
             file.write(f"Готов изучить {ready_to_study}.\n")
             file.write(
-                f"Также знаком с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url} \n\n")
-            file.write(self.create_ai_text())
+                f"Также работал с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url} \n\n")
+            file.write(created_ai_text)
             file.write(f"\n\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
             file.write(f"Мои контакты: тг: @{os.getenv('MY_TELEGRAM')} e-mail: {os.getenv('MY_EMAIL')}")
             file.write(f"\n\n{self.company_name}\n{self.position}\n{self.url}\n{self.salary}")
