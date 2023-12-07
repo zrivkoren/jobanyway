@@ -21,10 +21,9 @@ WORDS_FOR_REPLACE = {
     "github": "Git",
     "docer compose": "Docker compose",
     "nginx": "nginx",
-
 }
 RESERVED_WORDS = {
-    "ООП": "Знание ООП",
+    "ООП": "с использованием ООП",
 }
 
 
@@ -73,6 +72,7 @@ class Vacancy:
             content["company_text"] = company_text
             try:
                 salary = soup.find(attrs={'data-qa': 'vacancy-salary'}).text
+                salary = salary.replace(' ', '')
             except:
                 salary = "Зарплата не указана"
             content["salary"] = salary
@@ -91,9 +91,6 @@ class Vacancy:
                     self.skills = w
                 text = re.sub(w, "", text, flags=re.IGNORECASE)
 
-        for word in RESERVED_WORDS:
-            if word in text.lower():
-                self.skills = RESERVED_WORDS[word]
         for item in re.findall("[a-zA-Z]{3,}", text):
             self.skills = item
 
@@ -109,6 +106,11 @@ class Vacancy:
                 r'\b' + x + r'\b', ' '.join(resume.skills), re.IGNORECASE
             )],
         }
+        for key, value in compare.items():
+            if 'HTML' in value and 'CSS' in value:
+                compare[key].remove('HTML')
+                compare[key].remove('CSS')
+                compare[key].append('HTML/CSS')
         return compare
 
     def create_ai_text(self):
@@ -131,7 +133,7 @@ class Vacancy:
                 f"Также работал с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url} \n\n")
             file.write(created_ai_text)
             file.write(f"\n\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
-            file.write(f"Мои контакты: тг: @{os.getenv('MY_TELEGRAM')} e-mail: {os.getenv('MY_EMAIL')}")
+            file.write(f"Мои контакты: тг: @{os.getenv('MY_TELEGRAM')}\ne-mail: {os.getenv('MY_EMAIL')}")
             file.write(f"\n\n{self.company_name}\n{self.position}\n{self.url}\n{self.salary}")
         print("Конец обработки вакансии и резюме")
         file_path = f"output_files/{date.today()}_{self.company_name}.txt"
