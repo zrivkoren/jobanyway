@@ -1,6 +1,9 @@
 import g4f
 
 
+g4f.debug.logging = True
+
+
 def get_inf(text):
     print("Начало генерации текста ИИ")
     text_value = f"""
@@ -14,7 +17,7 @@ def get_inf(text):
         )
         print("Конец генерации текста ИИ")
     except Exception as e:
-        print("Возникла ошибка во время генерации текста, вот текст для ручной генерации:\n")
+        print("-Возникла ошибка во время генерации текста-. Текст для ручной генерации сформирован.\n")
         print(e)
         response = text_value
     return response
@@ -23,4 +26,4 @@ def get_inf(text):
 if __name__ == '__main__':
     text = """  """
 
-    print(get_inf(text=text))
+    print(get_inf(text))

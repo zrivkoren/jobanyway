@@ -110,7 +110,10 @@ class Vacancy:
             if 'HTML' in value and 'CSS' in value:
                 compare[key].remove('HTML')
                 compare[key].remove('CSS')
-                compare[key].append('HTML/CSS')
+                if 'Bootstrap' in value:
+                    compare[key].insert(value.index('Bootstrap') + 1, 'HTML/CSS')
+                else:
+                    compare[key].append('HTML/CSS')
         return compare
 
     def create_ai_text(self):
@@ -130,7 +133,7 @@ class Vacancy:
                 f"Некоторые мои проекты можно посмотреть на гитхабе {resume.my_github}\n")
             file.write(f"Готов изучить {ready_to_study}.\n")
             file.write(
-                f"Также работал с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url} \n\n")
+                f"Также работал с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url}\n\n")
             file.write(created_ai_text)
             file.write(f"\n\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
             file.write(f"Мои контакты: тг: @{os.getenv('MY_TELEGRAM')}\ne-mail: {os.getenv('MY_EMAIL')}")
