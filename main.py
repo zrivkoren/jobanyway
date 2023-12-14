@@ -95,7 +95,6 @@ class Vacancy:
                 'href')
             company_description = self.parse_vacancy_company_description(url_company_description)
             content["company_text"] = company_text + company_description
-            pass
         except Exception as e:
             print(e)
         return content
@@ -159,7 +158,10 @@ class Vacancy:
         print("Конец обработки вакансии и резюме")
         file_path = f"output_files/{date.today()}_{self.company_name}.txt"
         notepad_path = r'C:\Program Files\Notepad++\notepad++.exe'
-        subprocess.run([notepad_path, file_path], shell=True)
+        try:
+            subprocess.run([notepad_path, file_path], shell=True, timeout=1)
+        except TimeoutError:
+            pass
 
 
 class OfflineVacancy(Vacancy):
