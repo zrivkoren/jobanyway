@@ -27,6 +27,11 @@ RESERVED_WORDS = {
 }
 
 
+def make_clean_text(text):
+    text = re.sub(r"[^а-яА-Яa-zA-Z.,;:!?]", " ", text)
+    return re.sub(' +', ' ', text)
+
+
 class Vacancy:
     def __init__(self, url):
         self.url = url
@@ -35,12 +40,8 @@ class Vacancy:
         content = self.parse_vacancy()
         self.position = content["position"]
         self.company_name = content["company_name"]
-        self.company_text = self.get_clean_text(content["company_text"])
+        self.company_text = content["company_text"]
         self.salary = content["salary"]
-
-    @staticmethod
-    def get_clean_text(text):
-        return re.sub(r"[^а-яА-Яa-zA-Z.,;:!?]", " ", text)
 
     @property
     def skills(self):
@@ -53,7 +54,19 @@ class Vacancy:
         if value.lower() not in [x.lower() for x in self._skills]:
             self._skills.append(value)
 
+    def parse_vacancy_company_description(self, url):
+        data = requests.get(url=url, headers=self.headers)
+        if data.status_code != 200:
+            return
+        soup = BeautifulSoup(data.text, "lxml")
+        try:
+            company_descr = soup.find('div', attrs={'data-qa': 'company-description-text'}).find().text
+            return " Информация о компании: " + make_clean_text(company_descr)
+        except Exception as e:
+            print(e)
+
     def parse_vacancy(self):
+        print("Начался парсинг вакансии")
         data = requests.get(url=self.url, headers=self.headers)
         if data.status_code != 200:
             return
@@ -68,8 +81,8 @@ class Vacancy:
             [self.skills.append(
                 x.text if (x.text.lower() not in WORDS_FOR_REPLACE) else WORDS_FOR_REPLACE[x.text.lower()]
             ) for x in soup.findAll('div', class_='bloko-tag bloko-tag_inline')]
-            company_text = soup.find('div', class_='vacancy-section').text
-            content["company_text"] = company_text
+            raw_company_text = soup.find('div', class_='vacancy-section').text
+            company_text = make_clean_text(raw_company_text)
             try:
                 salary = soup.find(attrs={'data-qa': 'vacancy-salary'}).text
                 salary = salary.replace(' ', '')
@@ -78,6 +91,11 @@ class Vacancy:
             content["salary"] = salary
 
             self.check_text_on_skills(company_text)
+            url_company_description = 'https://hh.ru' + soup.find('span', class_='vacancy-company-name').find('a').get(
+                'href')
+            company_description = self.parse_vacancy_company_description(url_company_description)
+            content["company_text"] = company_text + company_description
+            pass
         except Exception as e:
             print(e)
         return content
@@ -144,7 +162,7 @@ class Vacancy:
         subprocess.run([notepad_path, file_path], shell=True)
 
 
-class SimpleVacancy(Vacancy):
+class OfflineVacancy(Vacancy):
     def __init__(self, url=None):
         self._skills = []
         with open("simple_vacancy.txt", "r", encoding="utf-8") as file:
@@ -171,5 +189,5 @@ if __name__ == '__main__':
     if IS_HH_VACATION:
         vacancy = Vacancy(os.getenv("VACATION_URL"))
     else:
-        vacancy = SimpleVacancy()
+        vacancy = OfflineVacancy()
     vacancy.create_cover_letter(my_resume)
