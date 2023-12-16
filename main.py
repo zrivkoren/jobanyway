@@ -6,42 +6,65 @@ import os
 from dotenv import load_dotenv
 import re
 from datetime import date
-import main_g4f
+
+import aggregators
+# import main_g4f
 import subprocess
 
-load_dotenv()
+from settings import WORDS_FOR_REPLACE
+from aggregators import *
+from templates import get_letter_from_base_template
 
-WORDS_FOR_REPLACE = {
-    "django framework": "Django",
-    "django rest framework": "Django Rest Framework",
-    "fast api": "FastAPI",
-    "fastapi": "FastAPI",
-    "drf": "Django Rest Framework",
-    "postgres": "PostgreSQL",
-    "github": "Git",
-    "docer compose": "Docker compose",
-    "nginx": "nginx",
-}
-RESERVED_WORDS = {
-    "ООП": "с использованием ООП",
-}
+load_dotenv()
 
 
 def make_clean_text(text):
     text = re.sub(r"[^а-яА-Яa-zA-Z.,;:!?]", " ", text)
+    text = re.sub(r"[ ]", " ", text)
     return re.sub(' +', ' ', text)
 
 
+def check_text_on_skills(text: str) -> list:
+    skills = []
+    for w in WORDS_FOR_REPLACE:
+        if w in text.lower():
+            if w in WORDS_FOR_REPLACE:
+                skills.append(WORDS_FOR_REPLACE[w])
+            else:
+                skills.append(w)
+            text = re.sub(w, "", text, flags=re.IGNORECASE)
+
+    for item in re.findall("[a-zA-Z]{3,}", text):
+        skills.append(item)
+    return skills
+
+
+def create_ai_text(text):
+    return main_g4f.get_inf(text)
+
+
 class Vacancy:
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, path=""):
+        self._path = path
         self._skills = []
-        self.headers = {"user-agent": UserAgent().random}
-        content = self.parse_vacancy()
+        content = self.check_vacancy_for_provider()
         self.position = content["position"]
         self.company_name = content["company_name"]
         self.company_text = content["company_text"]
         self.salary = content["salary"]
+        for s in content["skills"]:
+            self.skills = s
+        self.compared_skills = self.compare_skills(my_resume)
+        CoverLetter(self)
+
+    def check_vacancy_for_provider(self):
+        if "hh.ru" in self._path:
+            provider = aggregators.HHru()
+            return provider.parse_vacancy(self._path)
+        elif "habr.com" in self._path:
+            self.provider = aggregators.Habr()
+        else:
+            self.provider = aggregators.OfflineAggregator()
 
     @property
     def skills(self):
@@ -53,63 +76,6 @@ class Vacancy:
             value = WORDS_FOR_REPLACE[value.lower()]
         if value.lower() not in [x.lower() for x in self._skills]:
             self._skills.append(value)
-
-    def parse_vacancy_company_description(self, url):
-        data = requests.get(url=url, headers=self.headers)
-        if data.status_code != 200:
-            return
-        soup = BeautifulSoup(data.text, "lxml")
-        try:
-            company_descr = soup.find('div', attrs={'data-qa': 'company-description-text'}).find().text
-            return " Информация о компании: " + make_clean_text(company_descr)
-        except Exception as e:
-            print(e)
-
-    def parse_vacancy(self):
-        print("Начался парсинг вакансии")
-        data = requests.get(url=self.url, headers=self.headers)
-        if data.status_code != 200:
-            return
-        content = dict()
-        soup = BeautifulSoup(data.text, "lxml")
-        try:
-            content["position"] = soup.find(attrs={'class': 'bloko-header-section-1'}).text
-            content["company_name"] = soup.find("span", class_='vacancy-company-name').find(
-                'span', class_='bloko-header-section-2 bloko-header-section-2_lite'
-            ).contents[-1]
-
-            [self.skills.append(
-                x.text if (x.text.lower() not in WORDS_FOR_REPLACE) else WORDS_FOR_REPLACE[x.text.lower()]
-            ) for x in soup.findAll('div', class_='bloko-tag bloko-tag_inline')]
-            raw_company_text = soup.find('div', class_='vacancy-section').text
-            company_text = make_clean_text(raw_company_text)
-            try:
-                salary = soup.find(attrs={'data-qa': 'vacancy-salary'}).text
-                salary = salary.replace(' ', '')
-            except:
-                salary = "Зарплата не указана"
-            content["salary"] = salary
-
-            self.check_text_on_skills(company_text)
-            url_company_description = 'https://hh.ru' + soup.find('span', class_='vacancy-company-name').find('a').get(
-                'href')
-            company_description = self.parse_vacancy_company_description(url_company_description)
-            content["company_text"] = company_text + company_description
-        except Exception as e:
-            print(e)
-        return content
-
-    def check_text_on_skills(self, text):
-        for w in WORDS_FOR_REPLACE:
-            if w in text.lower():
-                if w in WORDS_FOR_REPLACE:
-                    self.skills = WORDS_FOR_REPLACE[w]
-                else:
-                    self.skills = w
-                text = re.sub(w, "", text, flags=re.IGNORECASE)
-
-        for item in re.findall("[a-zA-Z]{3,}", text):
-            self.skills = item
 
     def compare_skills(self, resume):
         compare = {
@@ -133,41 +99,11 @@ class Vacancy:
                     compare[key].append('HTML/CSS')
         return compare
 
-    def create_ai_text(self):
-        return main_g4f.get_inf(self.company_text)
-
-    def create_cover_letter(self, resume):
-        compare = self.compare_skills(my_resume)
-        matching_skills = ', '.join(compare["matching_skills"])
-        my_remaining_skills = ', '.join(compare["my_remaining_skills"])
-        ready_to_study = ', '.join(compare["ready_to_study"])
-        created_ai_text = self.create_ai_text()
-        with open(f"output_files/{date.today()}_{self.company_name}.txt", "w", encoding="utf-8") as file:
-            file.write("Добрый день!\n")
-            file.write(f"Меня зовут {resume.name}, пишу по вакансии {self.position}.\n")
-            file.write(f"У меня есть опыт разработки на {matching_skills}.\n")
-            file.write(
-                f"Некоторые мои проекты можно посмотреть на гитхабе {resume.my_github}\n")
-            file.write(f"Готов изучить {ready_to_study}.\n")
-            file.write(
-                f"Также работал с {my_remaining_skills} и другими технологиями. Подробнее в резюме {resume.resume_file_url}\n\n")
-            file.write(created_ai_text)
-            file.write(f"\n\nГотов выполнить тестовое задание.\nБуду благодарен за любую обратную связь.\n\n")
-            file.write(f"Мои контакты: тг: @{os.getenv('MY_TELEGRAM')}\ne-mail: {os.getenv('MY_EMAIL')}")
-            file.write(f"\n\n{self.company_name}\n{self.position}\n{self.url}\n{self.salary}")
-        print("Конец обработки вакансии и резюме")
-        file_path = f"output_files/{date.today()}_{self.company_name}.txt"
-        notepad_path = r'C:\Program Files\Notepad++\notepad++.exe'
-        try:
-            subprocess.run([notepad_path, file_path], shell=True, timeout=1)
-        except TimeoutError:
-            pass
-
 
 class OfflineVacancy(Vacancy):
-    def __init__(self, url=None):
+    def __init__(self, path="simple_vacancy.txt"):
         self._skills = []
-        with open("simple_vacancy.txt", "r", encoding="utf-8") as file:
+        with open(path, "r", encoding="utf-8") as file:
             self.url = file.readline()
             self.company_name = file.readline().strip()
             self.position = file.readline().strip()
@@ -184,12 +120,45 @@ class MyResume:
         self.resume_file_url = os.getenv("RESUME_FILE_URL")
 
 
-IS_HH_VACATION = True
+class CoverLetter:
+    def __init__(self, vacancy):
+        self._vacancy = vacancy
+        self._text = ""
+        self.file_path = f"output_files/{date.today()}_{self._vacancy.company_name}.txt"
+        self.create_cover_letter()
+
+    def create_cover_letter(self):
+        created_ai_text = create_ai_text(self._vacancy.company_text)
+        dict_to_send_to_letter_template = {
+            "matching_skills": ', '.join(self._vacancy.compared_skills["matching_skills"]),
+            "my_remaining_skills": ', '.join(self._vacancy.compared_skills["my_remaining_skills"]),
+            "ready_to_study_skills": ', '.join(self._vacancy.compared_skills["ready_to_study"]),
+            "created_ai_text": created_ai_text,
+            "this_vacancy": self._vacancy,
+        }
+        self._text = get_letter_from_base_template(dict_to_send_to_letter_template)
+        print("Конец обработки сопроводительного письма")
+
+    def save_to_file(self):
+
+        with open(self.file_path, "w", encoding="utf-8") as file:
+            file.write(self._text)
+            file.write(f"\n\n{self._vacancy.company_name}\n{self._vacancy.position}\n{self._vacancy._path}\n{self._vacancy.salary} ")
+            print(f"Сопроводительное письмо сохранено в {self.file_path}")
+
+    def run_local_cover_letter(self):
+        file_path = f"output_files/{date.today()}_{self._vacancy.company_name}.txt"
+        notepad_path = r'C:\Program Files\Notepad++\notepad++.exe'
+        try:
+            subprocess.run([notepad_path, file_path], shell=True, timeout=1)
+            print(f"{self.file_path} открыт")
+        except Exception as e:
+            pass
+
 
 if __name__ == '__main__':
     my_resume = MyResume()
-    if IS_HH_VACATION:
-        vacancy = Vacancy(os.getenv("VACATION_URL"))
-    else:
-        vacancy = OfflineVacancy()
-    vacancy.create_cover_letter(my_resume)
+    vacancy_for_me = Vacancy("")
+    cover_letter = CoverLetter(vacancy_for_me)
+    cover_letter.save_to_file()
+    cover_letter.run_local_cover_letter()

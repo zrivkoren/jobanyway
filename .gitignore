@@ -139,3 +139,4 @@ dmypy.json
 
 /output_files/
 /simple_vacancy.txt
+/templates.py
