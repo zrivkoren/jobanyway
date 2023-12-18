@@ -1,14 +1,9 @@
 from abc import ABC, abstractmethod
-from bs4 import BeautifulSoup
 # import lxml
 import requests
 from bs4 import BeautifulSoup
-# import lxml
 from fake_useragent import UserAgent
 import os
-# from dotenv import load_dotenv
-# import re
-# from datetime import date
 
 import main_g4f
 
@@ -73,7 +68,7 @@ class HHru(Aggregator):
         soup = BeautifulSoup(data.text, "lxml")
         try:
             company_descr = soup.find('div', attrs={'data-qa': 'company-description-text'}).find().text
-            return " Информация о компании: " + make_clean_text(company_descr)
+            return "-Информация о самой компании-: " + make_clean_text(company_descr)
         except Exception as e:
             print(f"Парсинг информации о компании {url} завершился с ошибкой", e)
             return ' '
@@ -83,7 +78,24 @@ class Habr(Aggregator):
     def __init__(self):
         super().__init__()
 
+    def parse_vacancy_company_description(self, url):
+        pass
+
 
 class OfflineAggregator(Aggregator):
     def __init__(self):
-        pass
+        super().__init__()
+
+    def parse_vacancy(self, path):
+        content = dict()
+        with open(path, "r", encoding="utf-8") as file:
+            content["offline_vacation_url"] = file.readline().strip()
+            content["company_name"] = file.readline().strip()
+            content["position"] = file.readline().strip()
+            content["salary"] = file.readline().strip()
+            content["company_text"] = file.readlines()
+            print("Файл оффлайн вакансии прочитан")
+        company_text = make_clean_text(content["company_text"])
+        content["skills"] = check_text_on_skills(company_text)
+        content["company_text"] = company_text
+        return content

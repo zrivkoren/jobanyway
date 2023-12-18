@@ -44,8 +44,8 @@ def create_ai_text(text):
 
 
 class Vacancy:
-    def __init__(self, path=""):
-        self._path = path
+    def __init__(self, url=""):
+        self.url = url
         self._skills = []
         content = self.check_vacancy_for_provider()
         self.position = content["position"]
@@ -58,13 +58,16 @@ class Vacancy:
         CoverLetter(self)
 
     def check_vacancy_for_provider(self):
-        if "hh.ru" in self._path:
+        if "hh.ru" in self.url:
             provider = aggregators.HHru()
-            return provider.parse_vacancy(self._path)
-        elif "habr.com" in self._path:
-            self.provider = aggregators.Habr()
+            return provider.parse_vacancy(self.url)
+        elif "habr.com" in self.url:
+            provider = aggregators.Habr()
         else:
-            self.provider = aggregators.OfflineAggregator()
+            provider = aggregators.OfflineAggregator()
+            result = provider.parse_vacancy(os.getenv("OFFLINE_VACATION_PATH"))
+            self.url = result["offline_vacation_url"]
+            return result
 
     @property
     def skills(self):
@@ -100,18 +103,6 @@ class Vacancy:
         return compare
 
 
-class OfflineVacancy(Vacancy):
-    def __init__(self, path="simple_vacancy.txt"):
-        self._skills = []
-        with open(path, "r", encoding="utf-8") as file:
-            self.url = file.readline()
-            self.company_name = file.readline().strip()
-            self.position = file.readline().strip()
-            self.salary = file.readline().strip()
-            self.company_text = " ".join([x.strip() for x in file.readlines()])
-        self.check_text_on_skills(self.company_text)
-
-
 class MyResume:
     def __init__(self):
         self.name = os.getenv("RESUME_NAME")
@@ -121,33 +112,33 @@ class MyResume:
 
 
 class CoverLetter:
-    def __init__(self, vacancy):
-        self._vacancy = vacancy
+    def __init__(self, vacancy: Vacancy):
+        self.vacancy = vacancy
         self._text = ""
-        self.file_path = f"output_files/{date.today()}_{self._vacancy.company_name}.txt"
+        self.file_path = f"output_files/{date.today()}_{self.vacancy.company_name}.txt"
         self.create_cover_letter()
 
     def create_cover_letter(self):
-        created_ai_text = create_ai_text(self._vacancy.company_text)
+        created_ai_text = create_ai_text(self.vacancy.company_text)
         dict_to_send_to_letter_template = {
-            "matching_skills": ', '.join(self._vacancy.compared_skills["matching_skills"]),
-            "my_remaining_skills": ', '.join(self._vacancy.compared_skills["my_remaining_skills"]),
-            "ready_to_study_skills": ', '.join(self._vacancy.compared_skills["ready_to_study"]),
+            "matching_skills": ', '.join(self.vacancy.compared_skills["matching_skills"]),
+            "my_remaining_skills": ', '.join(self.vacancy.compared_skills["my_remaining_skills"]),
+            "ready_to_study_skills": ', '.join(self.vacancy.compared_skills["ready_to_study"]),
             "created_ai_text": created_ai_text,
-            "this_vacancy": self._vacancy,
+            "this_vacancy": self.vacancy,
         }
         self._text = get_letter_from_base_template(dict_to_send_to_letter_template)
         print("Конец обработки сопроводительного письма")
 
     def save_to_file(self):
-
         with open(self.file_path, "w", encoding="utf-8") as file:
             file.write(self._text)
-            file.write(f"\n\n{self._vacancy.company_name}\n{self._vacancy.position}\n{self._vacancy._path}\n{self._vacancy.salary} ")
+            file.write(f"\n\n{self.vacancy.company_name}")
+            file.write(f"{self.vacancy.position}\n{self.vacancy.url}\n{self.vacancy.salary} ")
             print(f"Сопроводительное письмо сохранено в {self.file_path}")
 
     def run_local_cover_letter(self):
-        file_path = f"output_files/{date.today()}_{self._vacancy.company_name}.txt"
+        file_path = f"output_files/{date.today()}_{self.vacancy.company_name}.txt"
         notepad_path = r'C:\Program Files\Notepad++\notepad++.exe'
         try:
             subprocess.run([notepad_path, file_path], shell=True, timeout=1)
@@ -157,8 +148,9 @@ class CoverLetter:
 
 
 if __name__ == '__main__':
+    main_vacation_url = "https://hh.ru/vacancy/90521379"
     my_resume = MyResume()
-    vacancy_for_me = Vacancy("")
+    vacancy_for_me = Vacancy(main_vacation_url)
     cover_letter = CoverLetter(vacancy_for_me)
     cover_letter.save_to_file()
     cover_letter.run_local_cover_letter()
