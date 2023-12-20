@@ -1,7 +1,4 @@
-import requests
-from bs4 import BeautifulSoup
 # import lxml
-from fake_useragent import UserAgent
 import os
 from dotenv import load_dotenv
 import re
@@ -55,7 +52,7 @@ class Vacancy:
         for s in content["skills"]:
             self.skills = s
         self.compared_skills = self.compare_skills(my_resume)
-        CoverLetter(self)
+        self.cover_letter = CoverLetter(self)
 
     def check_vacancy_for_provider(self):
         if "hh.ru" in self.url:
@@ -114,7 +111,7 @@ class MyResume:
 class CoverLetter:
     def __init__(self, vacancy: Vacancy):
         self.vacancy = vacancy
-        self._text = ""
+        self.text = ""
         self.file_path = f"output_files/{date.today()}_{self.vacancy.company_name}.txt"
         self.create_cover_letter()
 
@@ -127,13 +124,13 @@ class CoverLetter:
             "created_ai_text": created_ai_text,
             "this_vacancy": self.vacancy,
         }
-        self._text = get_letter_from_base_template(dict_to_send_to_letter_template)
+        self.text = get_letter_from_base_template(dict_to_send_to_letter_template)
         print("Конец обработки сопроводительного письма")
 
     def save_to_file(self):
         with open(self.file_path, "w", encoding="utf-8") as file:
-            file.write(self._text)
-            file.write(f"\n\n{self.vacancy.company_name}")
+            file.write(self.text)
+            file.write(f"\n\n{self.vacancy.company_name}\n")
             file.write(f"{self.vacancy.position}\n{self.vacancy.url}\n{self.vacancy.salary} ")
             print(f"Сопроводительное письмо сохранено в {self.file_path}")
 
@@ -148,9 +145,8 @@ class CoverLetter:
 
 
 if __name__ == '__main__':
-    main_vacation_url = "https://hh.ru/vacancy/90521379"
+    main_vacation_url = "https://hh.ru/vacancy/90392650"
     my_resume = MyResume()
-    vacancy_for_me = Vacancy(main_vacation_url)
-    cover_letter = CoverLetter(vacancy_for_me)
-    cover_letter.save_to_file()
-    cover_letter.run_local_cover_letter()
+    vacancy = Vacancy(main_vacation_url)
+    vacancy.cover_letter.save_to_file()
+    vacancy.cover_letter.run_local_cover_letter()

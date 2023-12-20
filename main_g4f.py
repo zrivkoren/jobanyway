@@ -8,13 +8,13 @@ def get_inf(text_input):
     print("Начало генерации текста ИИ...")
     text_value = get_text_from_template(text_input)
     response = None
+    print(f"{text_value}")
     try:
         response = g4f.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": text_value}],
         )
         print("Конец генерации текста ИИ")
-        print(f"{response=}")
         if not response:
             response = text_value
     except Exception as e:
