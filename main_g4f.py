@@ -18,7 +18,7 @@ def get_inf(text_input):
         if not response:
             response = text_value
     except Exception as e:
-        print("-Возникла ошибка во время генерации текста-. Текст для ручной генерации сформирован.\n")
+        print("--Возникла ошибка во время генерации текста-- Текст для ручной генерации сформирован.\n")
         print(e)
         response = text_value
     return response

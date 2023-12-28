@@ -5,7 +5,7 @@ import re
 from datetime import date
 
 import aggregators
-# import main_g4f
+import main_g4f
 import subprocess
 
 from settings import WORDS_FOR_REPLACE
@@ -60,6 +60,7 @@ class Vacancy:
             return provider.parse_vacancy(self.url)
         elif "habr.com" in self.url:
             provider = aggregators.Habr()
+            ret_result = provider.parse_vacancy(self.url)
         else:
             provider = aggregators.OfflineAggregator()
             result = provider.parse_vacancy(os.getenv("OFFLINE_VACATION_PATH"))
@@ -145,8 +146,7 @@ class CoverLetter:
 
 
 if __name__ == '__main__':
-    main_vacation_url = "https://hh.ru/vacancy/90392650"
     my_resume = MyResume()
-    vacancy = Vacancy(main_vacation_url)
+    vacancy = Vacancy(os.getenv("MAIN_VACATION_URL"))
     vacancy.cover_letter.save_to_file()
     vacancy.cover_letter.run_local_cover_letter()
