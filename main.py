@@ -5,12 +5,14 @@ import re
 from datetime import date
 
 import aggregators
-import main_g4f
+# import main_g4f
+import asyncio
 import subprocess
 
 from settings import WORDS_FOR_REPLACE
 from aggregators import *
 from templates import get_letter_from_base_template
+from main_g4f import run_async_all
 
 load_dotenv()
 
@@ -37,7 +39,8 @@ def check_text_on_skills(text: str) -> list:
 
 
 def create_ai_text(text):
-    return main_g4f.get_inf(text)
+    return [value for item in asyncio.run(run_async_all(text)) for key, value in item.items() if value]
+    # return main_g4f.get_inf(text)
 
 
 class Vacancy:
@@ -117,7 +120,7 @@ class CoverLetter:
         self.create_cover_letter()
 
     def create_cover_letter(self):
-        created_ai_text = create_ai_text(self.vacancy.company_text)
+        created_ai_text = 'вариант: '.join(create_ai_text(self.vacancy.company_text))
         dict_to_send_to_letter_template = {
             "matching_skills": ', '.join(self.vacancy.compared_skills["matching_skills"]),
             "my_remaining_skills": ', '.join(self.vacancy.compared_skills["my_remaining_skills"]),
