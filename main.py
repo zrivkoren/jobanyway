@@ -1,11 +1,9 @@
-# import lxml
 import os
 from dotenv import load_dotenv
 import re
 from datetime import date
 
 import aggregators
-# import main_g4f
 import asyncio
 import subprocess
 
@@ -63,7 +61,7 @@ class Vacancy:
             return provider.parse_vacancy(self.url)
         elif "habr.com" in self.url:
             provider = aggregators.Habr()
-            ret_result = provider.parse_vacancy(self.url)
+            return provider.parse_vacancy(self.url)
         else:
             provider = aggregators.OfflineAggregator()
             result = provider.parse_vacancy(os.getenv("OFFLINE_VACATION_PATH"))
@@ -120,7 +118,7 @@ class CoverLetter:
         self.create_cover_letter()
 
     def create_cover_letter(self):
-        created_ai_text = 'вариант: '.join(create_ai_text(self.vacancy.company_text))
+        created_ai_text = '\n\nЕще вариант: '.join(create_ai_text(self.vacancy.company_text))
         dict_to_send_to_letter_template = {
             "matching_skills": ', '.join(self.vacancy.compared_skills["matching_skills"]),
             "my_remaining_skills": ', '.join(self.vacancy.compared_skills["my_remaining_skills"]),

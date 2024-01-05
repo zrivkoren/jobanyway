@@ -2,5 +2,5 @@ requests==2.31.0
 lxml==4.9.4
 beautifulsoup4==4.12.2
 python-dotenv==1.0.0
-g4f==0.1.9.6
+g4f==0.1.9.8
 selenium==4.15.2
