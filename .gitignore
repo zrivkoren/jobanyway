@@ -140,3 +140,5 @@ dmypy.json
 /output_files/
 /simple_vacancy.txt
 /templates.py
+/g4fproviders.py
+/g4ftest.py
