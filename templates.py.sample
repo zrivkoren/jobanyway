@@ -23,5 +23,5 @@ def get_letter_from_base_template(content: dict) -> str:
 
 def get_text_from_template(text: str) -> str:
     return f"""Напиши ка мне нейросеточка текст на основе вот этого {text}
-Да покрепче! Чтобы прям ууух!
+Да покрепче! Чтобы прям ууух! Почему я должен хотеть работать в данной компании
     """
