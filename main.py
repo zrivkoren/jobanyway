@@ -7,7 +7,7 @@ import aggregators
 import asyncio
 import subprocess
 
-from settings import WORDS_FOR_REPLACE
+from settings import WORDS_FOR_REPLACE, DIR_SETTINGS, BASE_SETTINGS
 from aggregators import *
 from templates import get_letter_from_base_template
 from main_g4f import run_async_all
@@ -64,7 +64,7 @@ class Vacancy:
             return provider.parse_vacancy(self.url)
         else:
             provider = aggregators.OfflineAggregator()
-            result = provider.parse_vacancy(os.getenv("OFFLINE_VACATION_PATH"))
+            result = provider.parse_vacancy(DIR_SETTINGS["OFFLINE_VACATION_PATH"])
             self.url = result["offline_vacation_url"]
             return result
 
@@ -114,7 +114,7 @@ class CoverLetter:
     def __init__(self, vacancy: Vacancy):
         self.vacancy = vacancy
         self.text = ""
-        self.file_path = f"output_files/{date.today()}_{self.vacancy.company_name}.txt"
+        self.file_path = f"{DIR_SETTINGS['SAVE_LOCATION_DIR']}{date.today()}_{self.vacancy.company_name}.txt"
         self.create_cover_letter()
 
     def create_cover_letter(self):
@@ -137,12 +137,11 @@ class CoverLetter:
             print(f"Сопроводительное письмо сохранено в {self.file_path}")
 
     def run_local_cover_letter(self):
-        file_path = f"output_files/{date.today()}_{self.vacancy.company_name}.txt"
-        notepad_path = r'C:\Program Files\Notepad++\notepad++.exe'
+        text_editor_path = DIR_SETTINGS["TEXT_EDITOR_PATH"]
         try:
-            subprocess.run([notepad_path, file_path], shell=True, timeout=1)
-            print(f"{self.file_path} открыт")
-        except Exception as e:
+            print(f"Открываю... {self.file_path}")
+            subprocess.run([text_editor_path, self.file_path], shell=True, timeout=1)
+        except Exception:
             pass
 
 
@@ -150,4 +149,8 @@ if __name__ == '__main__':
     my_resume = MyResume()
     vacancy = Vacancy(os.getenv("MAIN_VACATION_URL"))
     vacancy.cover_letter.save_to_file()
-    vacancy.cover_letter.run_local_cover_letter()
+    if BASE_SETTINGS["OPEN_LOCAL_COVER_LETTER"]:
+        try:
+            vacancy.cover_letter.run_local_cover_letter()
+        except Exception as e:
+            print(e)
