@@ -29,11 +29,18 @@
 
 `https://github.com/zrivkoren/jobanyway.git`
 
-2.  Создать и активировать виртуальное окружение
+2.  Создать и активировать виртуальное окружение.
+   
+Для Windows:
 
-`python -m venv env`
+`python -m venv env`  
+`env/Scripts/activate`  
 
-`env/Scripts/activate`
+Для Linux и macOS:  
+
+`python3 -m venv env`  
+ `source env/bin/activate`
+
 
 3.  Обновить pip и установить зависимости
 
