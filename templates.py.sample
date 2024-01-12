@@ -18,6 +18,9 @@ def get_letter_from_base_template(content: dict) -> str:
 {created_ai_text}\n\n
 Моя почта: {resume_email}\n Всего доброго, хорошего настроения и здоровья!\n  
     """
+
+    if BASE_SETTINGS.get("INCLUDE_REQUEST_TEXT_TO_RESULT"):
+        result += "\nТекст запроса на генерацию ИИ:\n" + content["text_to_generate_AI"]
     return result
 
 

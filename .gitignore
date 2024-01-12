@@ -142,3 +142,4 @@ dmypy.json
 /templates.py
 /g4fproviders.py
 /g4ftest.py
+/settings.py
