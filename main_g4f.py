@@ -33,11 +33,9 @@ async def run_provider(provider: g4f.Provider.BaseProvider, text: str):
 
 
 async def run_async_all(text_input):
-    text_value = get_text_from_template(text_input)
-    print(f"{text_value}")
     print("Начало асинхронной генерации текста ИИ...")
     calls = [
-        run_provider(provider, text_value) for provider in _providers
+        run_provider(provider, text_input) for provider in _providers
     ]
     await asyncio.gather(*calls)
     print("Конец генерации текста ИИ")

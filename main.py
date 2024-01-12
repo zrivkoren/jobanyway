@@ -9,7 +9,7 @@ import subprocess
 
 from settings import WORDS_FOR_REPLACE, DIR_SETTINGS, BASE_SETTINGS
 from aggregators import *
-from templates import get_letter_from_base_template
+from templates import get_letter_from_base_template, get_text_from_template
 from main_g4f import run_async_all
 
 load_dotenv()
@@ -38,7 +38,7 @@ def check_text_on_skills(text: str) -> list:
 
 def create_ai_text(text):
     return [value for item in asyncio.run(run_async_all(text)) for key, value in item.items() if value]
-    # return main_g4f.get_inf(text)
+    # return main_g4f.get_inf(text) # на случай если асинхронная генерация не работает
 
 
 class Vacancy:
@@ -115,16 +115,18 @@ class CoverLetter:
         self.vacancy = vacancy
         self.text = ""
         self.file_path = f"{DIR_SETTINGS['SAVE_LOCATION_DIR']}{date.today()}_{self.vacancy.company_name}.txt"
+        self.text_to_generate_AI = get_text_from_template(vacancy.company_text)
         self.create_cover_letter()
 
     def create_cover_letter(self):
-        created_ai_text = '\n\nЕще вариант: '.join(create_ai_text(self.vacancy.company_text))
+        created_ai_text = '\n\nЕще вариант: '.join(create_ai_text(self.text_to_generate_AI))
         dict_to_send_to_letter_template = {
             "matching_skills": ', '.join(self.vacancy.compared_skills["matching_skills"]),
             "my_remaining_skills": ', '.join(self.vacancy.compared_skills["my_remaining_skills"]),
             "ready_to_study_skills": ', '.join(self.vacancy.compared_skills["ready_to_study"]),
             "created_ai_text": created_ai_text,
             "this_vacancy": self.vacancy,
+            "text_to_generate_AI": self.text_to_generate_AI
         }
         self.text = get_letter_from_base_template(dict_to_send_to_letter_template)
         print("Конец обработки сопроводительного письма")
