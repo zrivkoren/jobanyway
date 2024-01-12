@@ -42,10 +42,15 @@
  `source env/bin/activate`
 
 
-3.  Обновить pip и установить зависимости
+3.  Обновить pip  
+`python -m pip install --upgrade pip`
+4. Установить зависимостей:  
+   Стандартная установка, включающая библиотеку g4f для дальнейшего использование:  
+`pip install -r requirements.txt`  
+Установка без библиотеки g4f (если при ее установке возникают ошибки или вы не хотите ей пользоваться):
+`pip install -r requirements_without_g4f.txt`  
+Также в settings.py.sample в BASE_SETTINGS установите "ENABLE_AI_G4F": False
 
-`python -m pip install --upgrade pip`  
-`pip install -r requirements.txt`
 
 ## Настройка (первые шаги)
 - Переименуйте файлы: templates.py.sample, simple_vacancy.txt.sample, .env.sample, settings.py.sample **в** templates.py, simple_vacancy.txt, .env, settings.py  
