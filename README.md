@@ -34,7 +34,7 @@
 Для Windows:
 
 `python -m venv env`  
-`.\venv\Scripts\activate`  
+`.\env\Scripts\activate`  
 
 Для Linux и macOS:  
 
