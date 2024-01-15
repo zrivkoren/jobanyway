@@ -56,17 +56,17 @@ class Vacancy:
         self.cover_letter = CoverLetter(self)
 
     def check_vacancy_for_provider(self):
-        if "hh.ru" in self.url:
+        if BASE_SETTINGS["RUN_PARSE_OFFLINE_VACATION"]:
+            provider = aggregators.OfflineAggregator()
+            result = provider.parse_vacancy(DIR_SETTINGS["OFFLINE_VACATION_PATH"])
+            self.url = result["offline_vacation_url"]
+            return result
+        elif "hh.ru" in self.url:
             provider = aggregators.HHru()
             return provider.parse_vacancy(self.url)
         elif "habr.com" in self.url:
             provider = aggregators.Habr()
             return provider.parse_vacancy(self.url)
-        else:
-            provider = aggregators.OfflineAggregator()
-            result = provider.parse_vacancy(DIR_SETTINGS["OFFLINE_VACATION_PATH"])
-            self.url = result["offline_vacation_url"]
-            return result
 
     @property
     def skills(self):

@@ -7,7 +7,8 @@ DIR_SETTINGS = {
 BASE_SETTINGS = {
     "OPEN_LOCAL_COVER_LETTER": True,
     "INCLUDE_REQUEST_TEXT_TO_RESULT": True,  # Включить текст сырого запроса для генерации в итоговое письмо
-    "ENABLE_AI_G4F": True
+    "ENABLE_AI_G4F": True,
+    "RUN_PARSE_OFFLINE_VACATION": False
 }
 
 WORDS_FOR_REPLACE = {
