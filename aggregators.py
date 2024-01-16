@@ -18,18 +18,27 @@ class Aggregator(ABC):
     def parse_vacancy(self, url):
         pass
 
+    def get_soup(self, url):
+        try:
+            data = requests.get(url=url, headers=self.headers, timeout=5)
+            data.raise_for_status()
+            return BeautifulSoup(data.text, "lxml")
+        except requests.exceptions.Timeout:
+            print("Запрос превысил таймаут")
+        except requests.exceptions.ConnectionError as error:
+            print("Ошибка соединения:", error)
+        except requests.exceptions.HTTPError as error:
+            print("Ошибка HTTP:", error)
+
 
 class HHru(Aggregator):
     def __init__(self):
         super().__init__()
 
     def parse_vacancy(self, url):
-        data = requests.get(url=url, headers=self.headers)
-        if data.status_code != 200:
-            return
+        soup = self.get_soup(url=url)
         content = dict()
         content["skills"] = []
-        soup = BeautifulSoup(data.text, "lxml")
         try:
             content["position"] = soup.find(attrs={'class': 'bloko-header-section-1'}).text
             content["company_name"] = soup.find("span", class_='vacancy-company-name').find(
@@ -60,10 +69,7 @@ class HHru(Aggregator):
         return content
 
     def parse_vacancy_company_description(self, url):
-        data = requests.get(url=url, headers=self.headers)
-        if data.status_code != 200:
-            return
-        soup = BeautifulSoup(data.text, "lxml")
+        soup = self.get_soup(url=url)
         try:
             company_descr = soup.find('div', attrs={'data-qa': 'company-description-text'}).find().text
             return "\n-Информация о самой компании-: " + make_clean_text(company_descr)
@@ -81,12 +87,9 @@ class Habr(Aggregator):
         super().__init__()
 
     def parse_vacancy(self, url):
-        data = requests.get(url=url, headers=self.headers)
-        if data.status_code != 200:
-            return
+        soup = self.get_soup(url=url)
         content = dict()
         content["skills"] = []
-        soup = BeautifulSoup(data.text, "lxml")
         try:
             up_section = soup.find('div', class_='basic-section')
             content["position"] = up_section.find("div", class_='page-title').text
@@ -117,10 +120,7 @@ class Habr(Aggregator):
         return content
 
     def parse_vacancy_company_description(self, url):
-        data = requests.get(url=url, headers=self.headers)
-        if data.status_code != 200:
-            return
-        soup = BeautifulSoup(data.text, "lxml")
+        soup = self.get_soup(url=url)
         try:
             company_descr = soup.find('div', class_='about_company').text
             return "\n-Информация о самой компании-: " + make_clean_text(company_descr)
