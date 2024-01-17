@@ -1,14 +1,17 @@
 DIR_SETTINGS = {
     "OFFLINE_VACATION_PATH": "simple_vacancy.txt",
     "TEXT_EDITOR_PATH": r"C:\Program Files\Notepad++\notepad++.exe",
-    "SAVE_LOCATION_DIR": "output_files/"
+    "SAVE_LOCATION_DIR": "output_files/",
+    "LOGS_DIR": "logs/"
 }
 
 BASE_SETTINGS = {
     "OPEN_LOCAL_COVER_LETTER": True,
     "INCLUDE_REQUEST_TEXT_TO_RESULT": True,  # Включить текст сырого запроса для генерации в итоговое письмо
     "ENABLE_AI_G4F": True,
-    "RUN_PARSE_OFFLINE_VACATION": False
+    "RUN_PARSE_OFFLINE_VACATION": False,
+    "LOG_LEVEL": "TRACE",
+    "SAVE_LOG_FILES": True
 }
 
 WORDS_FOR_REPLACE = {

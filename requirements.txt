@@ -5,3 +5,4 @@ python-dotenv==1.0.0
 g4f==0.1.9.9
 selenium==4.16.0
 fake-useragent==1.4.0
+loguru==0.7.2

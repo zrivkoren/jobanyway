@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import requests
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+from loguru import logger
 
 from settings import WORDS_FOR_REPLACE
 from main import make_clean_text, check_text_on_skills
@@ -17,7 +18,7 @@ class Aggregator(ABC):
     @abstractmethod
     def __init__(self):
         self.headers = {"user-agent": UserAgent().random}
-        print(f"Назначен агрегатор {self.__class__.__name__}")
+        logger.debug(f"Назначен агрегатор {self.__class__.__name__}")
 
     @abstractmethod
     def parse_vacancy(self, url):
@@ -29,11 +30,11 @@ class Aggregator(ABC):
             data.raise_for_status()
             return BeautifulSoup(data.text, "lxml")
         except requests.exceptions.Timeout:
-            print("Запрос превысил таймаут")
+            logger.error("Запрос превысил таймаут")
         except requests.exceptions.ConnectionError as error:
-            print("Ошибка соединения:", error)
+            logger.error(f"Ошибка соединения: {error}")
         except requests.exceptions.HTTPError as error:
-            print("Ошибка HTTP:", error)
+            logger.error(f"Ошибка HTTP: {error}")
 
 
 class HHru(Aggregator):
@@ -78,7 +79,7 @@ class HHru(Aggregator):
             company_description = self.parse_vacancy_company_description(url_company_description)
             content["company_text"] = company_text + company_description
         except Exception as e:
-            print("Ошибка при парсинге вакансии", e)
+            logger.error("Ошибка при парсинге вакансии", e)
         return content
 
     def parse_vacancy_company_description(self, url):
@@ -91,7 +92,7 @@ class HHru(Aggregator):
                 company_descr = soup.find('div', class_='employer-constructor-widgets-container').text
                 return "\n-Информация о самой компании-: " + make_clean_text(company_descr)
             except Exception as e:
-                print(f" -!-  Парсинг информации о компании {url} завершился с ошибкой -!-", e)
+                logger.error(f" -!-  Парсинг информации о компании {url} завершился с ошибкой -!-", e)
                 return ''
 
 
@@ -129,7 +130,7 @@ class Habr(Aggregator):
             company_description = self.parse_vacancy_company_description(url_company_description)
             content["company_text"] = company_text + company_description
         except Exception as e:
-            print(e)
+            logger.critical(e)
         return content
 
     def parse_vacancy_company_description(self, url):
@@ -138,7 +139,7 @@ class Habr(Aggregator):
             company_descr = soup.find('div', class_='about_company').text
             return "\n-Информация о самой компании-: " + make_clean_text(company_descr)
         except Exception as e:
-            print(f" -!-  Парсинг информации о компании {url} завершился с ошибкой -!-", e)
+            logger.error(f" -!-  Парсинг информации о компании {url} завершился с ошибкой -!-", e)
             return ''
 
 
@@ -154,7 +155,7 @@ class OfflineAggregator(Aggregator):
             content["position"] = file.readline().strip()
             content["salary"] = file.readline().strip()
             content["company_text"] = " ".join([x.strip() for x in file.readlines()])
-            print("Файл оффлайн вакансии прочитан")
+            logger.debug(f"Файл оффлайн вакансии {content['offline_vacation_url']} прочитан")
         company_text = make_clean_text(content["company_text"])
         content["skills"] = check_text_on_skills(company_text)
         content["company_text"] = company_text

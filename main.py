@@ -1,18 +1,25 @@
 import os
+import sys
 from dotenv import load_dotenv
 import re
 from datetime import date
-
-import aggregators
 import asyncio
 import subprocess
+from loguru import logger
 
+import aggregators
 from settings import WORDS_FOR_REPLACE, DIR_SETTINGS, BASE_SETTINGS
-from aggregators import *
 from templates import get_letter_from_base_template, get_text_from_template
 from main_g4f import run_async_all
 
 load_dotenv()
+
+log_format = "<green>{time:YYYY-MM-DD HH:mm}</green> | <level>{level: <8}</level> | <level>{message}</level>"
+logger.remove()
+logger.add(sys.stderr, format=log_format, colorize=True, level=f"{BASE_SETTINGS['LOG_LEVEL']}")
+if BASE_SETTINGS.get("SAVE_LOG_FILES"):
+    logger.add(f"{DIR_SETTINGS['LOGS_DIR']}/{date.today()}.log", format=log_format, rotation="1 day",
+               level=f"{BASE_SETTINGS['LOG_LEVEL']}")
 
 
 def make_clean_text(text):
@@ -56,6 +63,7 @@ class Vacancy:
         self.cover_letter = CoverLetter(self)
 
     def check_vacancy_for_provider(self):
+        logger.info(f"Начался парсинг вакансии {self.url}")
         if BASE_SETTINGS["RUN_PARSE_OFFLINE_VACATION"]:
             provider = aggregators.OfflineAggregator()
             result = provider.parse_vacancy(DIR_SETTINGS["OFFLINE_VACATION_PATH"])
@@ -130,22 +138,24 @@ class CoverLetter:
             "text_to_generate_AI": self.text_to_generate_AI
         }
         self.text = get_letter_from_base_template(dict_to_send_to_letter_template)
-        print("Конец обработки сопроводительного письма")
+        logger.info("Конец обработки сопроводительного письма")
 
     def save_to_file(self):
         with open(self.file_path, "w", encoding="utf-8") as file:
             file.write(self.text)
             file.write(f"\n\n{self.vacancy.company_name}\n")
             file.write(f"{self.vacancy.position}\n{self.vacancy.url}\n{self.vacancy.salary} ")
-            print(f"Сопроводительное письмо сохранено в {self.file_path}")
+            logger.success(f"Сопроводительное письмо сохранено в {self.file_path}")
 
     def run_local_cover_letter(self):
         text_editor_path = DIR_SETTINGS["TEXT_EDITOR_PATH"]
         try:
-            print(f"Открываю... {self.file_path}")
+            logger.warning(f"Открываю... {self.file_path}")
             subprocess.run([text_editor_path, self.file_path], shell=True, timeout=1)
-        except Exception:
-            pass
+        except subprocess.TimeoutExpired:
+            logger.success(f"файл {self.file_path} открыт")
+        except Exception as e:
+            logger.error(f"Произошла ошибка при открытии {self.file_path} - {e}")
 
 
 if __name__ == '__main__':
@@ -156,4 +166,5 @@ if __name__ == '__main__':
         try:
             vacancy.cover_letter.run_local_cover_letter()
         except Exception as e:
-            print(e)
+            logger.critical(e)
+    logger.success("Работа программы завершена")

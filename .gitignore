@@ -144,3 +144,4 @@ dmypy.json
 /g4ftest.py
 /settings.py
 /requirementsAll2.txt
+/sys.stderr
