@@ -8,6 +8,11 @@ from settings import WORDS_FOR_REPLACE
 from main import make_clean_text, check_text_on_skills
 
 
+def get_text_from_soup(source_soup: BeautifulSoup, tag: str, attributes: dict):
+    result = source_soup.find(tag, attrs=attributes)
+    return result.text if result else None
+
+
 class Aggregator(ABC):
     @abstractmethod
     def __init__(self):
@@ -40,7 +45,7 @@ class HHru(Aggregator):
         content = dict()
         content["skills"] = []
         try:
-            content["position"] = soup.find(attrs={'class': 'bloko-header-section-1'}).text
+            content["position"] = get_text_from_soup(soup, 'h1', {'class': 'bloko-header-section-1'})
             content["company_name"] = soup.find("span", class_='vacancy-company-name').find(
                 'span', class_='bloko-header-section-2 bloko-header-section-2_lite'
             ).contents[-1]
@@ -48,9 +53,17 @@ class HHru(Aggregator):
             [content["skills"].append(
                 x.text if (x.text.lower() not in WORDS_FOR_REPLACE) else WORDS_FOR_REPLACE[x.text.lower()]
             ) for x in soup.findAll('div', class_='bloko-tag bloko-tag_inline')]
-            raw_company_text = soup.find(
-                'div', attrs={'class': 'g-user-content', 'data-qa': 'vacancy-description'}
-            ).text
+
+            raw_company_text = get_text_from_soup(
+                soup, 'div', {'class': 'g-user-content', 'data-qa': 'vacancy-description-print'}
+            )
+            if not raw_company_text:
+                raw_company_text = get_text_from_soup(
+                    soup, 'div', {'class': 'g-user-content', 'data-qa': 'vacancy-description'}
+                )
+            if not raw_company_text:
+                raw_company_text = get_text_from_soup(soup, 'div', {'class': 'tmpl_hh_wrapper'})
+
             company_text = make_clean_text(raw_company_text)
             try:
                 salary = soup.find(attrs={'data-qa': 'vacancy-salary'}).text
@@ -65,7 +78,7 @@ class HHru(Aggregator):
             company_description = self.parse_vacancy_company_description(url_company_description)
             content["company_text"] = company_text + company_description
         except Exception as e:
-            print(e)
+            print("Ошибка при парсинге вакансии", e)
         return content
 
     def parse_vacancy_company_description(self, url):
