@@ -50,7 +50,7 @@ def create_ai_text(text):
 
 class Vacancy:
     def __init__(self, url=""):
-        self.url = url
+        self.url = url if not BASE_SETTINGS["RUN_PARSE_OFFLINE_VACATION"] else "offline"
         self._skills = []
         content = self.check_vacancy_for_provider()
         self.position = content["position"]

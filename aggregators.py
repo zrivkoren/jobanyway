@@ -155,7 +155,7 @@ class OfflineAggregator(Aggregator):
             content["position"] = file.readline().strip()
             content["salary"] = file.readline().strip()
             content["company_text"] = " ".join([x.strip() for x in file.readlines()])
-            logger.debug(f"Файл оффлайн вакансии {content['offline_vacation_url']} прочитан")
+            logger.debug(f"Файл оффлайн вакансии <{content['offline_vacation_url']}> прочитан")
         company_text = make_clean_text(content["company_text"])
         content["skills"] = check_text_on_skills(company_text)
         content["company_text"] = company_text
