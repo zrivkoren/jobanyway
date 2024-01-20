@@ -43,23 +43,3 @@ async def run_async_all(text_input):
     await asyncio.gather(*calls)
     logger.info("Конец генерации текста ИИ")
     return results
-
-
-def get_inf(text_input):
-    print("Начало генерации текста ИИ...")
-    text_value = get_text_from_template(text_input)
-    response = None
-    print(f"{text_value}")
-    try:
-        response = g4f.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": text_value}],
-        )
-        print("Конец генерации текста ИИ")
-        if not response:
-            response = text_value
-    except Exception as e:
-        print("--Возникла ошибка во время генерации текста-- Текст для ручной генерации сформирован.\n")
-        print(e)
-        response = text_value
-    return response
