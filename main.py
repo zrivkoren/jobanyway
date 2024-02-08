@@ -23,8 +23,8 @@ if BASE_SETTINGS.get("SAVE_LOG_FILES"):
 
 
 def make_clean_text(text):
-    text = re.sub(r"[^а-яА-Яa-zA-Z.,;:!?]", " ", text)
     text = re.sub(r"[ ]", " ", text)
+    text = re.sub(r"[^а-яА-Яa-zA-Z.,;:!?]", " ", text)
     return re.sub(' +', ' ', text)
 
 
@@ -127,8 +127,9 @@ class CoverLetter:
         self.create_cover_letter()
 
     def create_cover_letter(self):
-        created_ai_text = '\n\nЕще вариант: '.join(create_ai_text(self.text_to_generate_AI)) if BASE_SETTINGS.get(
-            "ENABLE_AI_G4F") else ""
+        created_ai_text = '\n\nЕще вариант: '.join(
+            create_ai_text(self.text_to_generate_AI)
+        ) if BASE_SETTINGS.get("ENABLE_AI_G4F") else ""
         dict_to_send_to_letter_template = {
             "matching_skills": ', '.join(self.vacancy.compared_skills["matching_skills"]),
             "my_remaining_skills": ', '.join(self.vacancy.compared_skills["my_remaining_skills"]),

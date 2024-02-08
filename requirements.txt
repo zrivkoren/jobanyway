@@ -1,8 +1,8 @@
 requests==2.31.0
 lxml==5.1.0
-beautifulsoup4==4.12.2
-python-dotenv==1.0.0
-g4f==0.1.9.9
+beautifulsoup4==4.12.3
+python-dotenv==1.0.1
+g4f==0.2.1.0
 selenium==4.16.0
 fake-useragent==1.4.0
 loguru==0.7.2

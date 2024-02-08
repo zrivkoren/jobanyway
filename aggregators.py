@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import requests
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
-from loguru import logger
+from main import logger
 
 from settings import WORDS_FOR_REPLACE
 from main import make_clean_text, check_text_on_skills
@@ -74,8 +74,9 @@ class HHru(Aggregator):
             content["salary"] = salary
             content["skills"].extend(check_text_on_skills(company_text))
 
-            url_company_description = 'https://hh.ru' + soup.find('span', class_='vacancy-company-name').find('a').get(
-                'href')
+            url_company_description = 'https://hh.ru' + soup.find(
+                'span', class_='vacancy-company-name'
+            ).find('a').get('href')
             company_description = self.parse_vacancy_company_description(url_company_description)
             content["company_text"] = company_text + company_description
         except Exception as e:
@@ -85,7 +86,8 @@ class HHru(Aggregator):
     def parse_vacancy_company_description(self, url):
         soup = self.get_soup(url=url)
         try:
-            company_descr = soup.find('div', attrs={'data-qa': 'company-description-text'}).find().text
+            company_descr = soup.find('div', class_="bloko-gap bloko-gap_top").text
+            # company_descr = soup.find('div', attrs={'data-qa': 'company-description-text'}).find().text
             return "\n-Информация о самой компании-: " + make_clean_text(company_descr)
         except:
             try:
