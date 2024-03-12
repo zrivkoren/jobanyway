@@ -142,6 +142,7 @@ class CoverLetter:
         logger.info("Конец обработки сопроводительного письма")
 
     def save_to_file(self):
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
         with open(self.file_path, "w", encoding="utf-8") as file:
             file.write(self.text)
             file.write(f"\n\n{self.vacancy.company_name}\n")
